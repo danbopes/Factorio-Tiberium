@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.16
+  Changes:
+    - Updated for Factorio 2.1
+    - Migrated recipe prototypes from the singular "category" field to the new "categories" list
+    - Switched the Tiberium science pack from a "tool" to a plain "item" and updated science pack detection to look in both data.raw.tool and data.raw.item
+    - Replaced "probability" with "independent_probability" on recipe and resource results
+    - Updated "mine-entity" research triggers to use the "entities" list instead of the removed "entity" field
+    - Updated the layered icon helper to read defines.constant.default_icon_size
+    - Updated the Tiberium Centrifuge to source assembler pipe pictures from the base assembler-pictures module
+    - Switched quality seed recycling to require the recycler module instead of quality
+    - Replaced flib table_size usage with the built-in table_size and added a local format_version shim for the removed flib migration module
+  Bugfixes:
+    - Fixed mined entity fluid handling to use the updated runtime fluidbox API (fluids_count)
+---------------------------------------------------------------------------------------------------
 Version: 2.0.15
   Bugfixes:
     - Fixed crash with Canal Excavator and other modded mining drills

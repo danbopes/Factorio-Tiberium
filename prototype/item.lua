@@ -61,16 +61,13 @@ data:extend{
 		stack_size = 200
 	},
 	{
-		type = "tool",
+		type = "item",
 		name = "tiberium-science",
 		icon = tiberiumInternalName.."/graphics/icons/tacitus.png",
 		icon_size = 32,
 		flags = {},
 		subgroup = "a-items",
 		order = "g[tiberium-science]",  -- After space science
-		durability = 1,
-		durability_description_key = "description.science-pack-remaining-amount-key",
-		durability_description_value = "description.science-pack-remaining-amount-value",
 		stack_size = 200,
 		weight = 1000,
 	},

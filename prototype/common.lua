@@ -128,13 +128,13 @@ end
 ---@param targetSize? int What size the top layer should be scaled to
 ---@return data.IconData[] Icons Table to be used with prototypes.icons
 common.layeredIcons = function(baseImg, baseSize, layerImg, layerSize, corner, targetSize)
-	baseSize = baseSize or defines.default_icon_size  --[[@as int]]
-	layerSize = layerSize or defines.default_icon_size  --[[@as int]]
-	targetSize = targetSize or math.floor(defines.default_icon_size * 3 / 8)  --[[@as int]]
+	baseSize = baseSize or defines.constant.default_icon_size  --[[@as int]]
+	layerSize = layerSize or defines.constant.default_icon_size  --[[@as int]]
+	targetSize = targetSize or math.floor(defines.constant.default_icon_size * 3 / 8)  --[[@as int]]
 	local base = {
 		icon = baseImg,
 		icon_size = baseSize,
-		scale = defines.default_icon_size / baseSize,
+		scale = defines.constant.default_icon_size / baseSize,
 	}
 	local corners = {ne = {x = 1, y = -1}, se = {x = 1, y = 1}, sw = {x = -1, y = 1}, nw = {x = -1, y = -1}}
 	local offset = {}
@@ -217,7 +217,7 @@ common.itemPrototypesFromTable = function(prototypeTable)
 				local max = tonumber(item.amount_max) or 1
 				amount = (min + math.max(min, max)) / 2
 			end
-			local probability = tonumber(item.probability)
+			local probability = tonumber(item.independent_probability)
 			if probability then
 				probability = math.max(0, math.min(1, probability))  -- Clamp to actual 0 to 1 range
 				amount = amount * probability
@@ -450,7 +450,7 @@ common.recipe.setResultProbability = function(recipeName, resultName, resultProb
 	if data.raw["recipe"][recipeName].results then
 		for _, result in pairs(data.raw["recipe"][recipeName].results) do
 			if result.name == resultName then
-				result.probability = resultProbability
+				result.independent_probability = resultProbability
 				break
 			end
 		end

@@ -29,7 +29,18 @@ storage = {}
 
 local crash_site = require("crash-site")
 local util = require("util")
-local migration = require("__flib__.migration")
+-- flib dropped its `migration` module in 0.17; only format_version was used.
+local migration = {
+	format_version = function(version, format)
+		if not version then return nil end
+		format = format or "%02d"
+		local parts = {}
+		for part in string.gmatch(version, "%d+") do
+			parts[#parts + 1] = string.format(format, tonumber(part))
+		end
+		return table.concat(parts, ".")
+	end,
+}
 local flib_table = require("__flib__.table")
 require("scripts.CnC_Walls") --Note, to make SonicWalls work / be passable
 require("scripts.informatron.informatron_remote_interface")
@@ -1859,7 +1870,7 @@ script.on_event(defines.events.on_object_destroyed, on_object_destroyed)
 ---@param event EventData.on_pre_player_mined_item|EventData.on_robot_pre_mined
 function on_pre_mined(event)
 	local entity = event.entity
-	if entity and entity.fluidbox then
+	if entity and entity.fluids_count > 0 then
 		local fluidContents = entity.get_fluid_contents()
 		local blueTibOre = (fluidContents["tiberium-slurry-blue"] or 0)
 		local greenTibOre = (fluidContents["tiberium-slurry"] or 0) + 2 * (fluidContents["molten-tiberium"] or 0) + 4 * (fluidContents["liquid-tiberium"] or 0)
@@ -2258,7 +2269,11 @@ function UnlockRecipePrereqs(force, targetRecipeName)
 		for _, product in pairs(recipe.products) do
 			if ingredientTechs[product.name] then
 				-- I'm not bothering with checking all structures' crafting categories but this should work most of the time
-				if recipe.enabled and (recipe.category == "crafting" or recipe.category == "smelting") and not recipe.hidden then
+				local basicCategory = false
+				for _, cat in pairs(recipe.categories) do
+					if cat == "crafting" or cat == "smelting" then basicCategory = true break end
+				end
+				if recipe.enabled and basicCategory and not recipe.hidden then
 					ingredientTechs[product.name] = nil
 				else
 					local tech = FindRecipeTech(force, recipeName)
@@ -2273,7 +2288,7 @@ function UnlockRecipePrereqs(force, targetRecipeName)
 		local best = math.huge
 		local unlockTech = nil
 		for _, tech in pairs(techs) do
-			local score = flib_table.size(TechPrereqList(force, tech))
+			local score = table_size(TechPrereqList(force, tech))
 			debugPrint(tech.." requires "..tostring(score).." prereqs to provide us with "..ingredient)
 			if score < best then
 				best = score

@@ -36,7 +36,7 @@ if mods["MoreScience"] then
 			-- Take our repeatable techs and swap them to infused packs
 			if techData.max_level and (techData.max_level == "infinite") then
 				for key, pack in pairs(techData.unit.ingredients) do
-					if data.raw.tool["infused-"..pack[1]] then
+					if (data.raw.tool and data.raw.tool["infused-"..pack[1]]) or data.raw.item["infused-"..pack[1]] then
 						pack[1] = "infused-"..pack[1]
 						if data.raw.technology[pack[1]] then
 							table.insert(techData.prerequisites, pack[1])
@@ -60,11 +60,11 @@ end
 
 if mods["pypetroleumhandling"] then
 	-- Move Liquid Tiberium recipe to Reformer
-	data.raw.recipe["tiberium-liquid-processing"].category = "reformer"
-	data.raw.recipe["tiberium-liquid-processing-hot"].category = "reformer"
+	data.raw.recipe["tiberium-liquid-processing"].categories = {"reformer"}
+	data.raw.recipe["tiberium-liquid-processing-hot"].categories = {"reformer"}
 	-- Move both Molten Tiberium recipes to Light Oil Refinery
-	data.raw.recipe["tiberium-molten-processing"].category = "lor"
-	data.raw.recipe["tiberium-advanced-molten-processing"].category = "lor"
+	data.raw.recipe["tiberium-molten-processing"].categories = {"lor"}
+	data.raw.recipe["tiberium-advanced-molten-processing"].categories = {"lor"}
 end
 
 if mods["IndustrialRevolution"] then
@@ -281,7 +281,7 @@ if settings.startup["tiberium-advanced-start"].value or common.whichPlanet == "t
 	end
 	for techName, tech in pairs(data.raw.technology) do
 		if tech.research_trigger and tech.research_trigger.type == "mine-entity" then
-			local resource = tech.research_trigger.entity  --[[@as string]]
+			local resource = tech.research_trigger.entities and tech.research_trigger.entities[1]  --[[@as string]]
 			if not string.find(resource or {}, "tiberium") and minableResorces[resource] then
 				-- Change the unlock to science pack and copy cost from prereq
 				local ingredientCount = 0
@@ -289,8 +289,8 @@ if settings.startup["tiberium-advanced-start"].value or common.whichPlanet == "t
 				for _, prereq in pairs(tech.prerequisites or {}) do
 					if data.raw.technology[prereq] and data.raw.technology[prereq].unit then
 						local unit = data.raw.technology[prereq].unit
-						if unit and flib_table.size(unit.ingredients) > ingredientCount then
-							ingredientCount = flib_table.size(unit)
+						if unit and table_size(unit.ingredients) > ingredientCount then
+							ingredientCount = table_size(unit)
 							copyFrom = prereq
 						end
 					end
@@ -299,7 +299,7 @@ if settings.startup["tiberium-advanced-start"].value or common.whichPlanet == "t
 					tech.research_trigger = nil
 					tech.unit = util.copy(data.raw.technology[copyFrom].unit)
 				else
-					tech.research_trigger.entity = "tiberium-ore"  -- No prereqs with unit costs, default to mining tiberium
+					tech.research_trigger.entities = {"tiberium-ore"}  -- No prereqs with unit costs, default to mining tiberium
 				end
 			end
 		end
@@ -372,7 +372,7 @@ for name, technology in pairs(data.raw.technology) do
 	if string.sub(name, 1, 9) == "tiberium-" and technology.unit then
 		for _, ingredient in pairs(technology.unit.ingredients) do
 			local pack = ingredient[1]
-			if (pack ~= "tiberium-science") and data.raw.tool[pack] then -- Don't add Tib Science
+			if (pack ~= "tiberium-science") and ((data.raw.tool and data.raw.tool[pack]) or data.raw.item[pack]) then -- Don't add Tib Science
 				tibComboPacks[pack] = true
 			end
 		end
@@ -396,10 +396,10 @@ end
 local sludgeRecipeCounter = 0
 for name, recipe in pairs(data.raw.recipe) do
 	if string.sub(name, 1, 9) ~= "tiberium-" and 
-			(recipe.category == "crafting" or recipe.category == "smelting" or recipe.category == "kr-crushing" or not recipe.category) then
+			(not recipe.categories or flib_table.find(recipe.categories, "crafting") or flib_table.find(recipe.categories, "smelting") or flib_table.find(recipe.categories, "kr-crushing")) then
 		local ingredients = common.recipeIngredientsTable(name)
 		local results = common.recipeResultsTable(name)
-		if flib_table.size(ingredients) == 1 and ingredients["stone"] and flib_table.size(results) == 1 then
+		if table_size(ingredients) == 1 and ingredients["stone"] and table_size(results) == 1 then
 			local resultName = next(results) or ""
 			if resultName ~= "landfill" and resultName ~= "stone-brick" and resultName ~= "concrete" then
 				sludgeRecipeCounter = sludgeRecipeCounter + 1
@@ -411,7 +411,7 @@ for name, recipe in pairs(data.raw.recipe) do
 						type = "recipe",
 						name = sludgeRecipeName,
 						localised_name = data.raw.fluid[resultName] and {"fluid-name."..resultName} or flib_locale.of("item", resultName),
-						category = "crafting-with-fluid",
+						categories = {"crafting-with-fluid"},
 						energy_required = ingredientAmount*(recipe.energy_required or 1)/(ingredients["stone"] or 1),
 						ingredients = {
 							{type = "fluid", name = "tiberium-sludge", amount = ingredientAmount}

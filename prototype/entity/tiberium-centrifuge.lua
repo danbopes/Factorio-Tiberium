@@ -1,4 +1,8 @@
 local greenFugeTint = {r = 0.3, g = 0.8, b = 0.3, a = 0.8}
+-- 2.1: assembler2pipepictures is no longer a global function, it's a field on
+-- the table returned by base's assembler-pictures module.
+local assembler_pictures = require("__base__.prototypes.entity.assembler-pictures")
+local assembler2pipepictures = function() return assembler_pictures.assembler2pipepictures end
 
 --Tiberium Centrifuge
 data:extend{
